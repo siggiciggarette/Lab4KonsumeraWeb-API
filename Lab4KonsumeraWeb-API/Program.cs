@@ -1,28 +1,47 @@
 ﻿using Lab4KonsumeraWeb_API;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 class Program
 {
     static async Task Main(string[] args)
     {
-        HttpClient client = new HttpClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; Lab4App)");
+        // Skapa en instans av HttpClient
+        using HttpClient client = new HttpClient();
 
-        // Hämta JSON-data från GitHub API
-        var response = await client.GetAsync("https://api.github.com/orgs/dotnet/repos");
-        var content = await response.Content.ReadAsStringAsync();
+        // Ange en User-Agent (krävs av GitHub API)
+        client.DefaultRequestHeaders.Add("User-Agent", "C# App");
 
-        // Deserialisera JSON till en lista av Repository-objekt
-        var repositories = JsonSerializer.Deserialize<List<Repository>>(content);
+        // URL till API:et
+        string url = "https://api.github.com/orgs/dotnet/repos";
 
-        // Skriv ut resultaten
-        foreach (var repo in repositories)
+        try
         {
-            Console.WriteLine(repo);
+            // Skicka en GET-förfrågan och vänta på svaret
+            HttpResponseMessage response = await client.GetAsync(url);
+
+            // Kontrollera att svaret är framgångsrikt
+            response.EnsureSuccessStatusCode();
+
+            // Läs innehållet som en sträng
+            string content = await response.Content.ReadAsStringAsync();
+
+            // Deserialisera JSON-strängen till en lista av Repository-objekt
+            var repositories = JsonSerializer.Deserialize<List<Repository>>(content);
+
+            // Iterera genom alla repository-objekt och skriv ut deras innehåll
+            foreach (var repo in repositories)
+            {
+                Console.WriteLine(repo);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Hantera eventuella fel
+            Console.WriteLine($"Ett fel inträffade: {ex.Message}");
         }
     }
 }
